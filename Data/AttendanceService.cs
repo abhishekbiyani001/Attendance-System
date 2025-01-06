@@ -51,6 +51,9 @@ namespace AttendanceSystem.Data
                 attendanceRecords.Remove(recordToRemove);
             }
         }
-        public List<AttendanceRecord> GetAttendanceRecords() => attendanceRecords;
+        public List<AttendanceRecord> GetAttendanceRecords()
+        {
+            return attendanceRecords;
+        }
     }
 }

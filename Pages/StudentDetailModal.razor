@@ -1,0 +1,70 @@
+﻿@using AttendanceSystem.Models;
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public Student? SelectedStudent { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    [Parameter]
+    public int StudentId { get; set; }
+
+    private void CloseModal()
+    {
+        IsVisible = false;
+        IsVisibleChanged.InvokeAsync(IsVisible);
+    }
+}
+
+@if (IsVisible)
+{
+    <div class="modal">
+        <div class="modal-content">
+            <span class="close" @onclick="CloseModal">&times;</span>
+            <p>Details for student with ID: @SelectedStudent!.Id</p>
+            <h4>Name of the student : @SelectedStudent.Name</h4>
+            <h4>Email of the student : @SelectedStudent.Email</h4>
+        </div>
+    </div>
+}
+
+<style>
+    .modal {
+        display: flex;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>

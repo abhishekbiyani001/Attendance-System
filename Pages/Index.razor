@@ -1,6 +1,8 @@
 ﻿@page "/"
-@using AttendanceSystem.Data
-@inject AttendanceService AttendanceService
+@using AttendanceSystem.Data;
+@inject AttendanceService AttendanceService;
+@using AttendanceSystem.Pages;
+@using AttendanceSystem.Models;
 
 <PageTitle>Student Attendance System</PageTitle>
 
@@ -15,8 +17,83 @@
             <div class="card-body">
                 <h5 class="card-title">@student.Name</h5>
                 <p class="card-text">Email: @student.Email</p>
-                <NavLink class="btn btn-primary" href="@($"studentdetails/{student.Id}")">View Details</NavLink>
+
+                <div>
+                    <label>
+                        <input style="margin: 10px;" type="radio" name="attendance_@student.Id"
+                               checked="@((attendanceStatus.ContainsKey(student.Id) && attendanceStatus[student.Id] == "present"))"
+                               value="present"
+                               onchange="@(() => UpdateAttendanceStatus(student.Id, "present"))" /> Present
+                    </label>
+                    <label>
+                        <input style="margin: 10px;" type="radio" name="attendance_@student.Id"
+                               checked="@((attendanceStatus.ContainsKey(student.Id) && attendanceStatus[student.Id] == "absent"))"
+                               value="absent"
+                               onchange="@(() => UpdateAttendanceStatus(student.Id, "absent"))" /> Absent
+                    </label>
+                </div>
+
+                <button class="btn btn-info" style="margin-top: 10px; margin: 10px;" @onclick="() => ShowStudentDetails(student)">View Details</button>
             </div>
         </div>
     }
 </div>
+
+<div style="display: flex; justify-content: center; margin-top: 30px;">
+    <button style="font-size: large; background-color: green;" class="btn btn-dark" @onclick="SubmitAttendance">Submit Attendance</button>
+</div>
+
+@if (!string.IsNullOrEmpty(feedbackMessage))
+{
+    <p class="feedback fade-in">@feedbackMessage</p>
+}
+
+<StudentDetailModal @bind-IsVisible="isStudentModalVisible" SelectedStudent="selectedStudent" />
+
+@code {
+    private Dictionary<int, string> attendanceStatus = new Dictionary<int, string>();
+    private string? feedbackMessage;
+    private bool isStudentModalVisible = false;
+    private Student? selectedStudent;
+
+    protected override void OnInitialized()
+    {
+        var students = AttendanceService.GetStudents();
+        foreach (var student in students)
+        {
+            attendanceStatus[student.Id] = "absent";
+        }
+    }
+
+    private void UpdateAttendanceStatus(int studentId, string status)
+    {
+        attendanceStatus[studentId] = status;
+    }
+
+    private void SubmitAttendance()
+    {
+        var today = DateTime.Today;
+
+        foreach (var student in AttendanceService.GetStudents())
+        {
+            if (attendanceStatus.ContainsKey(student.Id))
+            {
+                var isPresent = attendanceStatus[student.Id] == "present";
+                AttendanceService.RecordAttendance(student.Id, isPresent, today);
+            }
+        }
+
+        feedbackMessage = "Attendance submitted successfully!";
+
+        foreach (var student in attendanceStatus.Keys.ToList())
+        {
+            attendanceStatus[student] = "absent";
+        }
+    }
+
+    private void ShowStudentDetails(Student student)
+    {
+        selectedStudent = student;
+        isStudentModalVisible = true;
+    }
+}

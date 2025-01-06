@@ -5,23 +5,6 @@
 
 <h3>Attendance Records</h3>
 
-@code {
-    private Dictionary<int, string> studentLookup;
-    private List<AttendanceRecord> attendanceRecords;
-
-    protected override void OnInitialized()
-    {
-        studentLookup = AttendanceService.GetStudents().ToDictionary(s => s.Id, s => s.Name);
-        attendanceRecords = AttendanceService.GetAttendanceRecords();
-    }
-
-    private void DeleteRecord(int recordId)
-    {
-        AttendanceService.DeleteAttendanceRecord(recordId);
-        attendanceRecords = AttendanceService.GetAttendanceRecords();
-    }
-}
-
 <table class="table">
     <thead>
         <tr>
@@ -29,21 +12,37 @@
             <th>Student ID</th>
             <th>Student Name</th>
             <th>Presence Status</th>
-            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var record in attendanceRecords)
+        @if (attendanceRecords != null && attendanceRecords.Any())
+        {
+            @foreach (var record in attendanceRecords)
+            {
+                <tr>
+                    <td>@record.Date.ToShortDateString()</td>
+                    <td>@record.StudentId</td>
+                    <td>@(studentLookup!.TryGetValue(record.StudentId, out var studentName) ? studentName : "Unknown")</td>
+                    <td>@(record.IsPresent ? "Present" : "Absent")</td>
+                </tr>
+            }
+        }
+        else
         {
             <tr>
-                <td>@record.Date.ToShortDateString()</td>
-                <td>@record.StudentId</td>
-                <td>@(studentLookup.TryGetValue(record.StudentId, out var studentName) ? studentName : "Unknown")</td>
-                <td>@(record.IsPresent ? "Present" : "Absent")</td>
-                <td>
-                    <button class="btn btn-danger" @onclick="() => DeleteRecord(record.Id)">Delete</button> <!-- Delete button -->
-                </td>
+                <td colspan="4">No attendance records found.</td>
             </tr>
         }
     </tbody>
 </table>
+
+@code {
+    private Dictionary<int, string>? studentLookup;
+    private List<AttendanceRecord>? attendanceRecords;
+
+    protected override void OnInitialized()
+    {
+        studentLookup = AttendanceService.GetStudents().ToDictionary(s => s.Id, s => s.Name);
+        attendanceRecords = AttendanceService.GetAttendanceRecords();
+    }
+}
