@@ -1,0 +1,22 @@
+﻿@page "/"
+@using AttendanceSystem.Data
+@inject AttendanceService AttendanceService
+
+<PageTitle>Student Attendance System</PageTitle>
+
+<div class="heading-container">
+    <h1>Student Attendance System</h1>
+</div>
+
+<div class="student-cards">
+    @foreach (var student in AttendanceService.GetStudents())
+    {
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">@student.Name</h5>
+                <p class="card-text">Email: @student.Email</p>
+                <NavLink class="btn btn-primary" href="@($"studentdetails/{student.Id}")">View Details</NavLink>
+            </div>
+        </div>
+    }
+</div>

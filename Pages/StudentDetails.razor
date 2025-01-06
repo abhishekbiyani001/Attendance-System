@@ -1,0 +1,64 @@
+﻿@page "/studentdetails/{studentId:int}"
+@using AttendanceSystem.Data
+@using AttendanceSystem.Models
+@inject AttendanceService AttendanceService
+
+@code {
+    [Parameter] public int StudentId { get; set; }
+    private Student? student;
+    private string feedbackMessage = string.Empty;
+    private string feedbackClass = string.Empty;
+    private string? randomImageUrl;
+
+    protected override void OnInitialized()
+    {
+        student = AttendanceService.GetStudents().FirstOrDefault(s => s.Id == StudentId);
+        randomImageUrl = $"https://picsum.photos/100/100?random={StudentId}";
+    }
+}
+
+<div class="student-details">
+    <div class="student-image">
+        <img src="@randomImageUrl" alt="Student Image" />
+    </div>
+    <div class="student-info">
+        <h3>@student?.Name's Details</h3>
+
+        @if (student != null)
+        {
+            <p>Email: @student.Email</p>
+
+            <h4>Record Attendance</h4>
+
+            <button @onclick="() => RecordAttendance(true)">Present</button>
+            <button @onclick="() => RecordAttendance(false)">Absent</button>
+
+            <div class="feedback-container">
+                @if (!string.IsNullOrEmpty(feedbackMessage))
+                {
+                    <p class="feedback @feedbackClass fade-in">@feedbackMessage</p>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private void RecordAttendance(bool isPresent)
+    {
+        AttendanceService.RecordAttendance(student!.Id, isPresent);
+
+        feedbackMessage = isPresent ? $"{student.Name} marked as Present." : $"{student.Name} marked as Absent.";
+        feedbackClass = isPresent ? "feedback-present" : "feedback-absent";
+
+        _ = ClearFeedbackMessage();
+    }
+
+    private async Task ClearFeedbackMessage()
+    {
+        await Task.Delay(3000);
+        feedbackMessage = string.Empty;
+        StateHasChanged();
+        feedbackClass = string.Empty;
+    }
+}
