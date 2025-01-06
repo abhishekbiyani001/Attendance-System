@@ -1,0 +1,66 @@
+﻿@page "/attendancesummary"
+@using AttendanceSystem.Data
+@using AttendanceSystem.Models
+@inject AttendanceService AttendanceService
+
+<PageTitle>Attendance Summary</PageTitle>
+
+<h3>Attendance Summary</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Student Name</th>
+            <th>Total Present Days</th>
+            <th>Total Absent Days</th>
+            <th>Overall Attendance (%)</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var summary in summaries)
+        {
+            <tr>
+                <td>@summary.StudentName</td>
+                <td>@summary.TotalPresentDays</td>
+                <td>@summary.TotalAbsentDays</td>
+                <td>@summary.AttendancePercentage.ToString("F2")%</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<AttendanceSummaryModel>? summaries;
+
+    protected override void OnInitialized()
+    {
+        var students = AttendanceService.GetStudents();
+        var attendanceRecords = AttendanceService.GetAttendanceRecords();
+
+        summaries = students.Select(student => new AttendanceSummaryModel
+            {
+                StudentName = student.Name,
+                TotalPresentDays = attendanceRecords.Count(ar => ar.StudentId == student.Id && ar.IsPresent),
+                TotalAbsentDays = attendanceRecords.Count(ar => ar.StudentId == student.Id && !ar.IsPresent),
+                AttendancePercentage = CalculateAttendancePercentage(student.Id, attendanceRecords)
+            }).ToList();
+    }
+
+    private double CalculateAttendancePercentage(int studentId, List<AttendanceRecord> records)
+    {
+        var totalDays = records.Count(ar => ar.StudentId == studentId);
+        if (totalDays == 0) return 0;
+
+        var presentDays = records.Count(ar => ar.StudentId == studentId && ar.IsPresent);
+
+        return (double)presentDays / totalDays * 100;
+    }
+
+    public class AttendanceSummaryModel
+    {
+        public string? StudentName { get; set; }
+        public int TotalPresentDays { get; set; }
+        public int TotalAbsentDays { get; set; }
+        public double AttendancePercentage { get; set; }
+    }
+}

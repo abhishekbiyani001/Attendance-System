@@ -75,6 +75,10 @@ table {
     margin-top: 20px;
 }
 
+.table th, .table td {
+    text-align: center;
+}
+
 th, td {
     border: 1px solid #ddd;
     padding: 8px;

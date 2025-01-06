@@ -23,10 +23,9 @@ namespace AttendanceSystem.Data
 
         public List<Student> GetStudents() => students;
 
-        public void RecordAttendance(int studentId, bool isPresent)
+        public void RecordAttendance(int studentId, bool isPresent, DateTime date)
         {
-            var today = DateTime.Today;
-            var existingRecord = attendanceRecords.FirstOrDefault(ar => ar.StudentId == studentId && ar.Date == today);
+            var existingRecord = attendanceRecords.FirstOrDefault(ar => ar.StudentId == studentId && ar.Date.Date == date.Date);
 
             if (existingRecord != null)
             {
@@ -38,7 +37,7 @@ namespace AttendanceSystem.Data
                 {
                     Id = attendanceRecords.Count + 1,
                     StudentId = studentId,
-                    Date = today,
+                    Date = date,
                     IsPresent = isPresent
                 });
             }

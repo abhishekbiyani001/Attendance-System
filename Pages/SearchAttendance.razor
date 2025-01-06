@@ -1,0 +1,59 @@
+﻿@page "/searchattendance"
+@using AttendanceSystem.Data
+@using AttendanceSystem.Models
+@inject AttendanceService AttendanceService
+
+<PageTitle>Search Attendance Records</PageTitle>
+
+<h3>Search Attendance Records</h3>
+
+<div>
+    <input style="margin-top: 30px; margin-bottom: 30px;" type="text" @bind="searchTerm" placeholder="Search by student name..." />
+    <input style="margin-top: 30px; margin-bottom: 30px; margin-left: 30px; margin-right: 30px;" type="date" @bind="searchDate" />
+    <button @onclick="SearchRecords">Search</button>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Student ID</th>
+            <th>Student Name</th>
+            <th>Presence Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var record in filteredRecords)
+        {
+            <tr>
+                <td>@record.Date.ToShortDateString()</td>
+                <td>@record.StudentId</td>
+                <td>@(studentLookup.TryGetValue(record.StudentId, out var studentName) ? studentName : "Unknown")</td>
+                <td>@(record.IsPresent ? "Present" : "Absent")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private Dictionary<int, string> studentLookup;
+    private List<AttendanceRecord> attendanceRecords;
+    private List<AttendanceRecord> filteredRecords;
+    private string searchTerm = string.Empty;
+    private DateTime? searchDate;
+
+    protected override void OnInitialized()
+    {
+        studentLookup = AttendanceService.GetStudents().ToDictionary(s => s.Id, s => s.Name);
+        attendanceRecords = AttendanceService.GetAttendanceRecords();
+        filteredRecords = attendanceRecords;
+    }
+
+    private void SearchRecords()
+    {
+        filteredRecords = attendanceRecords.Where(record =>
+            (string.IsNullOrEmpty(searchTerm) ||
+             studentLookup.TryGetValue(record.StudentId, out var studentName) && studentName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (!searchDate.HasValue || record.Date.Date == searchDate.Value.Date)).ToList();
+    }
+}
