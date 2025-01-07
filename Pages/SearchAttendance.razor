@@ -28,7 +28,7 @@
             <tr>
                 <td>@record.Date.ToShortDateString()</td>
                 <td>@record.StudentId</td>
-                <td>@(studentLookup.TryGetValue(record.StudentId, out var studentName) ? studentName : "Unknown")</td>
+                <td>@studentLookup[record.StudentId]</td>
                 <td>@(record.IsPresent ? "Present" : "Absent")</td>
             </tr>
         }
@@ -44,16 +44,19 @@
 
     protected override void OnInitialized()
     {
-        studentLookup = AttendanceService.GetStudents().ToDictionary(s => s.Id, s => s.Name);
+        var students = AttendanceService.GetStudents();
+        studentLookup = students.ToDictionary(s => s.Id, s => s.Name);
+
         attendanceRecords = AttendanceService.GetAttendanceRecords();
-        filteredRecords = attendanceRecords;
+        filteredRecords = attendanceRecords.Where(record => studentLookup.ContainsKey(record.StudentId)).ToList();
     }
 
     private void SearchRecords()
     {
-        filteredRecords = attendanceRecords.Where(record =>
-            (string.IsNullOrEmpty(searchTerm) ||
-             studentLookup.TryGetValue(record.StudentId, out var studentName) && studentName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
-            (!searchDate.HasValue || record.Date.Date == searchDate.Value.Date)).ToList();
+        filteredRecords = attendanceRecords
+            .Where(record => (string.IsNullOrEmpty(searchTerm) ||
+                 studentLookup[record.StudentId].Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+                (!searchDate.HasValue || record.Date.Date == searchDate.Value.Date))
+            .ToList();
     }
 }

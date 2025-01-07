@@ -1,7 +1,11 @@
 ﻿@page "/attendance"
 @using AttendanceSystem.Data
 @using AttendanceSystem.Models
+@using Microsoft.EntityFrameworkCore;
+@inject AttendancedbContext DbContext;
 @inject AttendanceService AttendanceService
+
+<PageTitle>Attendance records</PageTitle>
 
 <h3>Attendance Records</h3>
 
@@ -17,15 +21,14 @@
     <tbody>
         @if (attendanceRecords != null && attendanceRecords.Any())
         {
-            @foreach (var record in attendanceRecords)
-            {
+            <Virtualize Items="filteredAttendanceRecords" Context="record">
                 <tr>
                     <td>@record.Date.ToShortDateString()</td>
                     <td>@record.StudentId</td>
-                    <td>@(studentLookup!.TryGetValue(record.StudentId, out var studentName) ? studentName : "Unknown")</td>
+                    <td>@studentLookup![record.StudentId]</td>
                     <td>@(record.IsPresent ? "Present" : "Absent")</td>
                 </tr>
-            }
+            </Virtualize>
         }
         else
         {
@@ -39,10 +42,12 @@
 @code {
     private Dictionary<int, string>? studentLookup;
     private List<AttendanceRecord>? attendanceRecords;
+    private List<AttendanceRecord>? filteredAttendanceRecords;
 
     protected override void OnInitialized()
     {
         studentLookup = AttendanceService.GetStudents().ToDictionary(s => s.Id, s => s.Name);
         attendanceRecords = AttendanceService.GetAttendanceRecords();
+        filteredAttendanceRecords = attendanceRecords?.Where(record => studentLookup.ContainsKey(record.StudentId)).ToList();
     }
 }

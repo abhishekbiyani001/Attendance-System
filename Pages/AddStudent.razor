@@ -1,0 +1,100 @@
+﻿@page "/addstudent"
+@using Microsoft.EntityFrameworkCore
+@using AttendanceSystem.Models
+@using AttendanceSystem.Data
+@inject AttendancedbContext DbContext
+
+<PageTitle>Add Students</PageTitle>
+
+<h3>Student List</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var student in students)
+        {
+            <tr>
+                <td>@student.Name</td>
+                <td>@student.Email</td>
+                <td>
+                    <button class="btn btn-danger" style="background-color: crimson;" @onclick="() => DeleteStudent(student.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h3>Add a New Student</h3>
+<EditForm Model="newStudent" OnValidSubmit="Addstudent">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Name:</label>
+        <InputText class="form-control" @bind-Value="newStudent.Name" />
+    </div>
+    <div class="mb-3">
+        <label>Email:</label>
+        <InputText class="form-control" @bind-Value="newStudent.Email" />
+    </div>
+    <button type="submit" class="btn btn-primary">Add Student</button>
+</EditForm>
+
+@code {
+    private List<Student> students = new();
+    private Student newStudent = new Student();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            students = await DbContext.Students.ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading students: {ex.Message}");
+        }
+    }
+
+    private async Task Addstudent()
+    {
+        if (!string.IsNullOrWhiteSpace(newStudent.Name) && !string.IsNullOrWhiteSpace(newStudent.Email))
+        {
+            try
+            {
+                DbContext.Students.Add(newStudent);
+                await DbContext.SaveChangesAsync();
+                students.Add(newStudent);
+                newStudent = new Student();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding student: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task DeleteStudent(int studentId)
+    {
+        try
+        {
+            var student = await DbContext.Students.FindAsync(studentId);
+            if (student != null)
+            {
+                DbContext.Students.Remove(student);
+                await DbContext.SaveChangesAsync();
+                students.Remove(student);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting student: {ex.Message}");
+        }
+    }
+}
