@@ -23,7 +23,7 @@
                 <td>@student.Name</td>
                 <td>@student.Email</td>
                 <td>
-                    <button class="btn btn-danger" style="background-color: crimson;" @onclick="() => DeleteStudent(student.Id)">Delete</button>
+                    <button class="btn btn-danger shadow-none" style="background-color: crimson;" @onclick="() => DeleteStudent(student.Id)">Delete</button>
                 </td>
             </tr>
         }
@@ -31,24 +31,29 @@
 </table>
 
 <h3>Add a New Student</h3>
-<EditForm Model="newStudent" OnValidSubmit="Addstudent">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
 
+<EditForm Model="newStudent" OnValidSubmit="Addstudent">
     <div class="mb-3">
         <label>Name:</label>
-        <InputText class="form-control" @bind-Value="newStudent.Name" />
+        <InputText class="form-control shadow-none" @bind-Value="newStudent.Name" />
     </div>
     <div class="mb-3">
         <label>Email:</label>
-        <InputText class="form-control" @bind-Value="newStudent.Email" />
+        <InputText class="form-control shadow-none" @bind-Value="newStudent.Email" />
     </div>
     <button type="submit" class="btn btn-primary">Add Student</button>
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mt-3 p-2">@errorMessage</div>
+    }
 </EditForm>
 
 @code {
     private List<Student> students = new();
     private Student newStudent = new Student();
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -68,14 +73,26 @@
         {
             try
             {
-                DbContext.Students.Add(newStudent);
-                await DbContext.SaveChangesAsync();
-                students.Add(newStudent);
-                newStudent = new Student();
+                var existingStudent = await DbContext.Students
+                    .FirstOrDefaultAsync(s => s.Name == newStudent.Name && s.Email == newStudent.Email);
+
+                if (existingStudent != null)
+                {
+                    errorMessage = "Student already exists.";
+                }
+                else
+                {
+                    DbContext.Students.Add(newStudent);
+                    await DbContext.SaveChangesAsync();
+                    students.Add(newStudent);
+                    newStudent = new Student();
+                    errorMessage = null;
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error adding student: {ex.Message}");
+                errorMessage = "An error occurred while adding the student.";
             }
         }
     }
