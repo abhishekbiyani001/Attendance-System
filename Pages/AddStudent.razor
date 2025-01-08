@@ -3,6 +3,7 @@
 @using AttendanceSystem.Models
 @using AttendanceSystem.Data
 @inject AttendancedbContext DbContext
+@inject AttendanceService AttendanceService
 
 <PageTitle>Add Students</PageTitle>
 
@@ -107,6 +108,7 @@
                 DbContext.Students.Remove(student);
                 await DbContext.SaveChangesAsync();
                 students.Remove(student);
+                AttendanceService.DeleteAttendanceRecord(studentId);
             }
         }
         catch (Exception ex)
