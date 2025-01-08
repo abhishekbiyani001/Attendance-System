@@ -52,10 +52,11 @@ namespace AttendanceSystem.Data
 
         public void DeleteAttendanceRecord(int recordId)
         {
-            var recordToRemove = _context.AttendanceRecords.FirstOrDefault(ar => ar.StudentId == recordId);
-            if (recordToRemove != null)
+            //var recordToRemove = _context.AttendanceRecords.FirstOrDefault(ar => ar.StudentId == recordId);
+            var recordToRemove = _context.AttendanceRecords.Where(ar => ar.StudentId == recordId).ToList();
+            if (recordToRemove.Any())
             {
-                _context.AttendanceRecords.Remove(recordToRemove);
+                _context.AttendanceRecords.RemoveRange(recordToRemove);
                 _context.SaveChanges();
             }
         }
