@@ -46,7 +46,7 @@
 @code {
     private void RecordAttendance(bool isPresent)
     {
-        AttendanceService.RecordAttendance(student!.Id, isPresent, DateTime.Today);
+        AttendanceService.RecordAttendance(student!.Id, isPresent, DateTime.Today, student!.Name);
 
         feedbackMessage = isPresent ? $"{student.Name} marked as Present." : $"{student.Name} marked as Absent.";
         feedbackClass = isPresent ? "feedback-present" : "feedback-absent";

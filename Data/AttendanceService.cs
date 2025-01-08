@@ -68,13 +68,30 @@ namespace AttendanceSystem.Data
         {
             _context = context;
         }
+        public List<AttendanceRecord> GetFilteredAttendanceRecords(string searchTerm, DateTime? searchDate)
+        {
+            var query = _context.AttendanceRecords.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                query = query.Where(record => _context.Students
+                    .Any(student => student.Id == record.StudentId && student.Name.Contains(searchTerm)));
+            }
+
+            if (searchDate.HasValue)
+            {
+                query = query.Where(record => record.Date == searchDate.Value);
+            }
+
+            return query.ToList();
+        }
 
         public List<Student> GetStudents()
         {
             return _context.Students.ToList();
         }
 
-        public void RecordAttendance(int studentId, bool isPresent, DateTime date)
+        public void RecordAttendance(int studentId, bool isPresent, DateTime date, string studentName)
         {
             var existingRecord = _context.AttendanceRecords.FirstOrDefault(ar => ar.StudentId == studentId && ar.Date.Date == date.Date);
 
@@ -85,14 +102,9 @@ namespace AttendanceSystem.Data
             }
             else
             {
-                var newRecord = new AttendanceRecord
-                {
-                    StudentId = studentId,
-                    Date = date,
-                    IsPresent = isPresent
-                };
+                var newRecord = new AttendanceRecord(studentId, date, isPresent, studentName);
 
-                _context.AttendanceRecords.Add(newRecord);
+            _context.AttendanceRecords.Add(newRecord);
                 _context.SaveChanges();
             }
         }

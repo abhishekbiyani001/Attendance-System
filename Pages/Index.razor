@@ -79,7 +79,7 @@
             if (attendanceStatus.ContainsKey(student.Id))
             {
                 var isPresent = attendanceStatus[student.Id] == "present";
-                AttendanceService.RecordAttendance(student.Id, isPresent, today);
+                AttendanceService.RecordAttendance(student.Id, isPresent, today, student.Name);
             }
         }
 
