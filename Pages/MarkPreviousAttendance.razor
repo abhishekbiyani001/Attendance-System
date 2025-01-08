@@ -1,0 +1,98 @@
+﻿@page "/markpreviousattendance"
+@using Microsoft.EntityFrameworkCore
+@using AttendanceSystem.Models
+@using AttendanceSystem.Data
+@inject AttendancedbContext DbContext
+@inject AttendanceService AttendanceService
+
+<PageTitle>Mark Previous Attendance</PageTitle>
+
+<h3>Mark Previous Attendance</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Student Id</th>
+            <th>Name</th>
+            <th>Date of Attendance</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var student in students)
+        {
+            <tr>
+                <td>@student.Id</td>
+                <td>@student.Name</td>
+                <td>
+                    <input type="date" @bind="attendanceDate" />
+                </td>
+                <td>
+                    <button class="btn btn-danger shadow-none" style="background-color: darkgreen; margin-right: 10px;" @onclick="() => MarkPresent(student.Id)">Mark Present</button>
+                    <button class="btn btn-danger shadow-none" style="background-color: darkred;" @onclick="() => MarkAbsent(student.Id)">Mark Absent</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (showWarning)
+{
+    <div class="alert alert-warning" role="alert">
+        Attendance cannot be marked for dates prior to one year from today and future dates too.
+    </div>
+}
+
+@code {
+    private List<Student> students = new();
+    private DateTime attendanceDate = DateTime.Today;
+    private bool showWarning = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            students = await DbContext.Students.ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading students: {ex.Message}");
+        }
+    }
+
+    private void MarkPresent(int studentId)
+    {
+        if (attendanceDate > DateTime.Today)
+        {
+            showWarning = true;
+            return;
+        }
+
+        if (attendanceDate < DateTime.Today.AddYears(-1))
+        {
+            showWarning = true;
+            return;
+        }
+
+        showWarning = false;
+        AttendanceService.RecordAttendance(studentId, true, attendanceDate, students.FirstOrDefault(s => s.Id == studentId)!.Name);
+    }
+
+    private void MarkAbsent(int studentId)
+    {
+        if (attendanceDate > DateTime.Today)
+        {
+            showWarning = true;
+            return;
+        }
+
+        if (attendanceDate < DateTime.Today.AddYears(-1))
+        {
+            showWarning = true;
+            return;
+        }
+
+        showWarning = false;
+        AttendanceService.RecordAttendance(studentId, false, attendanceDate, students.FirstOrDefault(s => s.Id == studentId)!.Name);
+    }
+}

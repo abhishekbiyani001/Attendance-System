@@ -33,20 +33,19 @@ namespace AttendanceSystem.Data
             return _context.Students.ToList();
         }
 
-        public void RecordAttendance(int studentId, bool isPresent, DateTime date, string studentName)
+        public void RecordAttendance(int studentId, bool isPresent, DateTime dateOfAttendance, string studentName)
         {
-            var existingRecord = _context.AttendanceRecords.FirstOrDefault(ar => ar.StudentId == studentId && ar.Date.Date == date.Date);
+            var existingRecord = _context.AttendanceRecords.FirstOrDefault(ar => ar.StudentId == studentId && ar.Date.Date == dateOfAttendance.Date);
 
             if (existingRecord != null)
             {
                 existingRecord.IsPresent = isPresent;
-                _context.SaveChanges();
             }
             else
             {
-                var newRecord = new AttendanceRecord(studentId, date, isPresent, studentName);
+                var newRecord = new AttendanceRecord(studentId, dateOfAttendance, isPresent, studentName);
 
-            _context.AttendanceRecords.Add(newRecord);
+                _context.AttendanceRecords.Add(newRecord);
                 _context.SaveChanges();
             }
         }

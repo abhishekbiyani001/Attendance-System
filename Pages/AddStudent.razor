@@ -12,6 +12,7 @@
 <table class="table">
     <thead>
         <tr>
+            <th>Student Id</th>
             <th>Name</th>
             <th>Email</th>
             <th>Actions</th>
@@ -21,6 +22,7 @@
         @foreach (var student in students)
         {
             <tr>
+                <td>@student.Id</td>
                 <td>@student.Name</td>
                 <td>@student.Email</td>
                 <td>

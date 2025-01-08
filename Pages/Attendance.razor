@@ -4,31 +4,22 @@
 @using Microsoft.EntityFrameworkCore;
 @inject AttendancedbContext DbContext;
 @inject AttendanceService AttendanceService
+@using Microsoft.AspNetCore.Components.QuickGrid;
 
 <PageTitle>Attendance records</PageTitle>
 
 <h3>Attendance Records</h3>
 
 <table class="table">
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Student ID</th>
-            <th>Student Name</th>
-            <th>Presence Status</th>
-        </tr>
-    </thead>
     <tbody>
         @if (attendanceRecords != null && attendanceRecords.Any())
         {
-            <Virtualize Items="filteredAttendanceRecords" Context="record">
-                <tr>
-                    <td>@record.Date.ToShortDateString()</td>
-                    <td>@record.StudentId</td>
-                    <td>@studentLookup![record.StudentId]</td>
-                    <td>@(record.IsPresent ? "Present" : "Absent")</td>
-                </tr>
-            </Virtualize>
+            <QuickGrid Items="filteredAttendanceRecords!.AsQueryable()" Virtualize="true" PageSize="10" Class="table table-striped table-hover">
+                <PropertyColumn Property="@(Record => Record.Date.ToShortDateString())" Title="Student Id" Sortable="true" />
+                <PropertyColumn Property="@(Record => Record.StudentId)" Title="Student ID" Sortable="true" />
+                <PropertyColumn Property="@(Record => studentLookup![Record.StudentId])" Title="Student Name" Sortable="true" />
+                <PropertyColumn Property="@(Record => Record.IsPresent ? "Present" : "Absent")" Title="Presence Status" Sortable="true" />
+            </QuickGrid>
         }
         else
         {
