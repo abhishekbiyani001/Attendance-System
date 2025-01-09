@@ -144,8 +144,12 @@ th {
 }
 
     .btn:hover {
-        background-color: #c82333;
+        background-color: #00dcea;
     }
+
+.btn-info:hover {
+    background-color: lightblue;
+}
 
 .student-details {
     display: flex;
