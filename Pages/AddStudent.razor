@@ -1,11 +1,11 @@
-﻿@page "/addstudent"
+﻿@page "/studentoperations"
 @using Microsoft.EntityFrameworkCore
 @using AttendanceSystem.Models
 @using AttendanceSystem.Data
 @inject AttendancedbContext DbContext
 @inject AttendanceService AttendanceService
 
-<PageTitle>Add Students</PageTitle>
+<PageTitle>Student Operations</PageTitle>
 
 <h3>Student List</h3>
 
@@ -26,7 +26,8 @@
                 <td>@student.Name</td>
                 <td>@student.Email</td>
                 <td>
-                    <button class="btn btn-danger shadow-none" style="background-color: crimson;" @onclick="() => DeleteStudent(student.Id)">Delete</button>
+                    <button class="btn btn-danger shadow-none" style="background-color: crimson; margin-right: 10px;" @onclick="() => DeleteStudent(student.Id)">Delete</button>
+                    <button class="btn btn-primary shadow-none" style="background-color: blue;" @onclick="() => ModifyStudent(student.Id)">Modify</button>
                 </td>
             </tr>
         }
@@ -53,10 +54,54 @@
     }
 </EditForm>
 
+@if (hasDeleted == true)
+{
+    <h4 style="padding: 10px; background-color: green; font-size: 20px; margin-top: 20px; border-radius: 5px; color: yellow;">Student Deleted Successfully.</h4>
+}
+
+@if (hasAdded == true)
+{
+    <h4 style="padding: 10px; background-color: green; font-size: 20px; margin-top: 20px; border-radius: 5px; color: yellow;">Student Added Successfully.</h4>
+}
+
+@if (isEditing)
+{
+    <div class="modify-form-container">
+        <div class="modify-form">
+            <EditForm Model="editingStudent" OnValidSubmit="UpdateStudent">
+                <h4 class="form-title">Edit Student Details</h4>
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <InputText id="name" class="form-control custom-input" @bind-Value="editingStudent!.Name" />
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <InputText id="email" class="form-control custom-input" @bind-Value="editingStudent.Email" />
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success shadow-none">Save Changes</button>
+                    <button type="button" class="btn btn-secondary shadow-none" @onclick="CancelEdit">Cancel</button>
+                </div>
+                @if (!string.IsNullOrEmpty(editErrorMessage))
+                {
+                    <div class="alert alert-danger mt-3 p-2">@editErrorMessage</div>
+                }
+            </EditForm>
+        </div>
+    </div>
+}
+
 @code {
     private List<Student> students = new();
     private Student newStudent = new();
+    private Student? editingStudent = null;
+    private bool isEditing = false;
     private string? errorMessage;
+    private string? editErrorMessage;
+    private bool hasDeleted = false;
+    private bool hasAdded = false;
+    private System.Timers.Timer? deleteNotificationTimer;
+    private System.Timers.Timer? addNotificationTimer;
 
     protected override async Task OnInitializedAsync()
     {
@@ -85,11 +130,16 @@
                 }
                 else
                 {
+                    hasAdded = true;
                     DbContext.Students.Add(newStudent);
                     await DbContext.SaveChangesAsync();
                     students.Add(newStudent);
                     newStudent = new Student();
                     errorMessage = null;
+                    addNotificationTimer = new System.Timers.Timer(2000);
+                    addNotificationTimer.Elapsed += HideAddNotification;
+                    addNotificationTimer.AutoReset = false;
+                    addNotificationTimer.Start();
                 }
             }
             catch (Exception ex)
@@ -107,15 +157,94 @@
             var student = await DbContext.Students.FindAsync(studentId);
             if (student != null)
             {
+                hasDeleted = true;
                 DbContext.Students.Remove(student);
                 await DbContext.SaveChangesAsync();
                 students.Remove(student);
                 AttendanceService.DeleteAttendanceRecord(studentId);
+
+                deleteNotificationTimer = new System.Timers.Timer(2000);
+                deleteNotificationTimer.Elapsed += HideDeleteNotification;
+                deleteNotificationTimer.AutoReset = false;
+                deleteNotificationTimer.Start();
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error deleting student: {ex.Message}");
         }
+    }
+
+    private void ModifyStudent(int studentId)
+    {
+        var student = students.FirstOrDefault(s => s.Id == studentId);
+        if (student != null)
+        {
+            isEditing = true;
+            editingStudent = new Student
+                {
+                    Id = student.Id,
+                    Name = student.Name,
+                    Email = student.Email
+                };
+        }
+    }
+
+    private async Task UpdateStudent()
+    {
+        if (editingStudent != null && !string.IsNullOrWhiteSpace(editingStudent.Name) && !string.IsNullOrWhiteSpace(editingStudent.Email))
+        {
+            try
+            {
+                var student = await DbContext.Students.FindAsync(editingStudent.Id);
+                if (student != null)
+                {
+                    student.Name = editingStudent.Name;
+                    student.Email = editingStudent.Email;
+
+                    await DbContext.SaveChangesAsync();
+
+                    var index = students.FindIndex(s => s.Id == editingStudent.Id);
+                    if (index >= 0)
+                    {
+                        students[index] = new Student
+                            {
+                                Id = editingStudent.Id,
+                                Name = editingStudent.Name,
+                                Email = editingStudent.Email
+                            };
+                    }
+
+                    isEditing = false;
+                    editingStudent = null;
+                    editErrorMessage = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating student: {ex.Message}");
+                editErrorMessage = "An error occurred while updating the student.";
+            }
+        }
+    }
+
+    private void CancelEdit()
+    {
+        isEditing = false;
+        editingStudent = null;
+    }
+
+    private void HideAddNotification(object? sender, System.Timers.ElapsedEventArgs e)
+    {
+        hasAdded = false;
+        addNotificationTimer?.Dispose();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HideDeleteNotification(object? sender, System.Timers.ElapsedEventArgs e)
+    {
+        hasDeleted = false;
+        deleteNotificationTimer?.Dispose();
+        InvokeAsync(StateHasChanged);
     }
 }

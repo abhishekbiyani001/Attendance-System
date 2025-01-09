@@ -14,11 +14,11 @@
     <tbody>
         @if (attendanceRecords != null && attendanceRecords.Any())
         {
-            <QuickGrid Items="filteredAttendanceRecords!.AsQueryable()" Virtualize="true" PageSize="10" Class="table table-striped table-hover">
-                <PropertyColumn Property="@(Record => Record.Date.ToShortDateString())" Title="Student Id" Sortable="true" />
-                <PropertyColumn Property="@(Record => Record.StudentId)" Title="Student ID" Sortable="true" />
-                <PropertyColumn Property="@(Record => studentLookup![Record.StudentId])" Title="Student Name" Sortable="true" />
-                <PropertyColumn Property="@(Record => Record.IsPresent ? "Present" : "Absent")" Title="Presence Status" Sortable="true" />
+            <QuickGrid Items="filteredAttendanceRecords!.AsQueryable()" Virtualize="true" PageSize="10" Class="table table-hover table-striped" style="color: black; text-align: center;">
+                <PropertyColumn Property="@(Record => Record.Date.ToShortDateString())" Title="Date" Class="bg-white text-black" Sortable="true" />
+                <PropertyColumn Property="@(Record => Record.StudentId)" Title="Student ID" Class="bg-white text-black" Sortable="true" />
+                <PropertyColumn Property="@(Record => studentLookup![Record.StudentId])" Class="bg-white text-black" Title="Student Name" Sortable="true" />
+                <PropertyColumn Property="@(Record => Record.IsPresent ? "Present" : "Absent")" Class="bg-white text-black" Title="Presence Status" Sortable="true" />
             </QuickGrid>
         }
         else
